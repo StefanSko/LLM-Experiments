@@ -24,8 +24,8 @@ stub = Stub("example-llama-cpp-mixtral", image=image)
 
 @stub.cls(gpu=GPU_CONFIG,
           allow_concurrent_inputs=10,
-          container_idle_timeout=60 * 10,
-          timeout=60 * 60,
+          container_idle_timeout=60,
+          timeout=60,
           image=image)
 class Model:
 
@@ -36,23 +36,37 @@ class Model:
 
 
     @method()
-    def generate(self, question: str, context: str = ""):
+    def generate(self, text: str):
 
-        formatted_question = f"{context}<s>[INST]{question}[/INST]"
+        prompt = f"""Please analyze the following text and provide an XML output with annotations for tonality and keywords:
+<text>
+{text}
+</text>
+
+Generate the output in the following XML format:
+
+<analyzed_text>
+  <tonality>[Detected tonality]</tonality>
+  <keywords>
+    <keyword>[Keyword 1]</keyword>
+    <keyword>[Keyword 2]</keyword>
+    ...
+  </keywords>
+</analyzed_text>"""
 
         return self.llama(
-            formatted_question,
-            temperature=0.1,
-            max_tokens=-1,
-            stop=["</s>"],
-            stream=False,
-            echo=True
+            prompt,
+            max_tokens=2000,
+            stop=["</analyzed_text>"],
+            echo=False,
+            stream=False
         )
 
 @stub.local_entrypoint()
 def main():
+
     print(
         Model().generate.remote(
-            "What is the capital of Germany?"
+            "Q: What is the capital of Germany? A:"
         )
     )
