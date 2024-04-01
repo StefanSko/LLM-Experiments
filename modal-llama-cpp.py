@@ -13,6 +13,7 @@ def download_model():
 image = (
     Image.from_registry("nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04", add_python="3.11")
     .apt_install("build-essential")
+    .copy_local_file(local_path='xml_simple.gbnf')
     .pip_install(
         "huggingface_hub",
         "sse_starlette",
@@ -21,6 +22,7 @@ image = (
 )
 
 stub = Stub("example-llama-cpp-mixtral", image=image)
+
 
 @stub.cls(gpu=GPU_CONFIG,
           allow_concurrent_inputs=10,
@@ -31,8 +33,11 @@ class Model:
 
     @enter()
     def startup(self):
-        from llama_cpp import Llama
+        from llama_cpp import Llama, LlamaGrammar
         self.llama = Llama(MODEL_DIR + "/" + MODEL_FILENAME, n_ctx=4096, n_gpu_layers=50, verbose=True)
+        with open('./xml_simple.gbnf', 'r') as f:
+            grammar = f.read()
+        self.grammar = LlamaGrammar(grammar)
 
 
     @method()
@@ -59,10 +64,9 @@ Generate the output in the following XML format:
             prompt,
             max_tokens=2000,
             temperature=0.1,
-
-            stop=["</analyzed_text>"],
             echo=False,
-            stream=False
+            stream=False,
+            grammar=self.grammar
         )
 
 @stub.local_entrypoint()
