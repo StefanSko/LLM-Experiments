@@ -1,8 +1,8 @@
 from modal import Image, Stub, method, gpu, enter
 
 GPU_CONFIG = gpu.A100(memory=40, count=1)
-MODEL_REPOS = "TheBloke/Mixtral-8x7B-v0.1-GGUF"
-MODEL_FILENAME = "mixtral-8x7b-v0.1.Q5_K_M.gguf"
+MODEL_REPOS = "TheBloke/Mixtral-8x7B-Instruct-v0.1-GGUF"
+MODEL_FILENAME = "mixtral-8x7b-instruct-v0.1.Q5_K_M.gguf"
 MODEL_DIR = "model/"
 
 
@@ -32,13 +32,13 @@ class Model:
     @enter()
     def startup(self):
         from llama_cpp import Llama
-        self.llama = Llama(MODEL_DIR + "/" + MODEL_FILENAME, n_ctx=4096, n_gpu_layers=-1, verbose=True)
+        self.llama = Llama(MODEL_DIR + "/" + MODEL_FILENAME, n_ctx=4096, n_gpu_layers=50, verbose=True)
 
 
     @method()
     def generate(self, text: str):
 
-        prompt = f"""Please analyze the following text and provide an XML output with annotations for tonality and keywords:
+        prompt = f"""[INST] Please analyze the following text and provide an XML output with annotations for tonality and keywords:
 <text>
 {text}
 </text>
@@ -52,11 +52,14 @@ Generate the output in the following XML format:
     <keyword>[Keyword 2]</keyword>
     ...
   </keywords>
-</analyzed_text>"""
+</analyzed_text>
+[/INST] """
 
         return self.llama(
             prompt,
             max_tokens=2000,
+            temperature=0.1,
+
             stop=["</analyzed_text>"],
             echo=False,
             stream=False
