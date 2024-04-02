@@ -35,7 +35,7 @@ class Model:
     def startup(self):
         from llama_cpp import Llama, LlamaGrammar
         self.llama = Llama(MODEL_DIR + "/" + MODEL_FILENAME, n_ctx=4096, n_gpu_layers=50, verbose=True)
-        with open('./xml_simple.gbnf', 'r') as f:
+        with open('xml_simple.gbnf', 'r') as f:
             grammar = f.read()
         self.grammar = LlamaGrammar(grammar)
 
