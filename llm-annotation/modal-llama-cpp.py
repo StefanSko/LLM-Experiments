@@ -37,7 +37,7 @@ class Model:
         self.llama = Llama(MODEL_DIR + "/" + MODEL_FILENAME, n_ctx=4096, n_gpu_layers=50, verbose=True)
         with open('xml_simple.gbnf', 'r') as f:
             grammar = f.read()
-        self.grammar = LlamaGrammar(grammar)
+        self.grammar = LlamaGrammar.from_string(grammar)
 
 
     @method()
