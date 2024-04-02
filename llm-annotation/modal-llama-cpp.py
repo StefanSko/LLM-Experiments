@@ -26,7 +26,7 @@ stub = Stub("example-llama-cpp-mixtral", image=image)
 
 @stub.cls(gpu=GPU_CONFIG,
           allow_concurrent_inputs=10,
-          container_idle_timeout=60,
+          container_idle_timeout=20,
           timeout=60,
           image=image)
 class Model:
