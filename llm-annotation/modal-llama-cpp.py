@@ -13,7 +13,7 @@ def download_model():
 image = (
     Image.from_registry("nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04", add_python="3.11")
     .apt_install("build-essential")
-    .copy_local_file(local_path='xml_simple.gbnf')
+    .copy_local_file(local_path='xml_simple.gbnf', remote_path='./root')
     .pip_install(
         "huggingface_hub",
         "sse_starlette",
