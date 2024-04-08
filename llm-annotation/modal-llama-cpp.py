@@ -11,9 +11,9 @@ def download_model():
     hf_hub_download(repo_id=MODEL_REPOS, filename=MODEL_FILENAME, local_dir=MODEL_DIR)
 
 image = (
-    Image.from_registry("nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04", add_python="3.11")
+    Image.from_registry("nvidia/cuda:12.4.0-devel-ubuntu22.04", add_python="3.11")
     .apt_install("build-essential")
-    .copy_local_file(local_path='xml_simple.gbnf', remote_path='./root')
+    .copy_local_file(local_path='json.gbnf', remote_path='./root')
     .pip_install(
         "huggingface_hub",
         "sse_starlette",
@@ -35,45 +35,44 @@ class Model:
     def startup(self):
         from llama_cpp import Llama, LlamaGrammar
         self.llama = Llama(MODEL_DIR + "/" + MODEL_FILENAME, n_ctx=4096, n_gpu_layers=50, verbose=True)
-        with open('xml_simple.gbnf', 'r') as f:
-            grammar = f.read()
-        self.grammar = LlamaGrammar.from_string(grammar)
+        #with open('json.gbnf', 'r') as f:
+        #    grammar = f.read()
+        #self.grammar = LlamaGrammar.from_string(grammar)
 
 
     @method()
     def generate(self, text: str):
 
-        prompt = f"""[INST] Please analyze the following text and provide an XML output with annotations for tonality and keywords:
+        prompt = f"""[INST] Please analyze the following text and provide a JSON output with annotations for tonality and keywords:
 <text>
 {text}
 </text>
 
-Generate the output in the following XML format:
+Generate the output in the following JSON format:
 
-<analyzed_text>
-  <tonality>[Detected tonality]</tonality>
-  <keywords>
-    <keyword>[Keyword 1]</keyword>
-    <keyword>[Keyword 2]</keyword>
+{{
+  "tonality": "[Detected tonality]",
+  "keywords": [
+    "[Keyword 1]",
+    "[Keyword 2]",
     ...
-  </keywords>
-</analyzed_text>
-[/INST] """
+  ]
+}}
+
+[/INST]"""
 
         return self.llama(
             prompt,
             max_tokens=2000,
             temperature=0.1,
             echo=False,
-            stream=False,
-            grammar=self.grammar
-        )
+            stream=False)
 
 @stub.local_entrypoint()
 def main():
-
+    with open('text', 'r') as f:
+        text = f.read()
     print(
-        Model().generate.remote(
-            "Q: What is the capital of Germany? A:"
-        )
+        Model().generate.remote(text)
     )
+
